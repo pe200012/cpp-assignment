@@ -158,7 +158,7 @@ public:
             statement.addBindValue(trueUser.c_str());
             statement.exec();
             statement.prepare("INSERT INTO projects VALUES(?, ?, ?);");
-            statement.addBindValue(&counter);
+            statement.addBindValue(counter);
             statement.addBindValue(cxt.getParams().getName().cStr());
             statement.addBindValue(trueUser.c_str());
             statement.exec();
@@ -172,13 +172,24 @@ public:
         ::capnp::MallocMessageBuilder msg;
         withLogin(cxt, [&](auto user) {
             QSqlQuery statement;
-            statement.prepare("SELECT name FROM projects WHERE user = ?;");
+            statement.prepare("SELECT name FROM projects WHERE \"user\" = ?;");
+            KJ_LOG(INFO, user);
             statement.addBindValue(user.c_str());
             statement.exec();
             auto result = msg.initRoot<Either<BoxedText, ::capnp::List<Project>>>();
-            auto ls = result.initRight(statement.size());
-            int i = 10;
+            int ss=0;
+            if (db.driver()->hasFeature(QSqlDriver::QuerySize)) {
+                ss=statement.size();
+            } else {
+                statement.last();
+                ss = statement.at() + 1;
+                statement.first();
+            }
+            KJ_LOG(INFO, ss);
+            auto ls = result.initRight(ss);
+            int i = 0;
             while (statement.next()) {
+                KJ_LOG(INFO, statement.value(0).toString().toStdString());
                 ls[i].setName(statement.value(0).toString().toStdString());
                 ++i;
             }
