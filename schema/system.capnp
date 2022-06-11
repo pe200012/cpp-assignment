@@ -17,6 +17,7 @@ struct InitPack {
 }
 
 struct Project {
+    id @1 :Int32;
     name @0 :Text;
 }
 

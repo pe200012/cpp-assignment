@@ -168,29 +168,37 @@ public:
         return kj::READY_NOW;
     }
 
+    kj::Promise<void> remove(RemoveContext cxt) override {
+        withLogin(cxt, [](auto user) {
+
+        }, [&cxt]() {
+            cxt.getResults().setError("please login first");
+        });
+        return kj::READY_NOW;
+    }
+
     kj::Promise<void> listProject(ListProjectContext cxt) override {
         ::capnp::MallocMessageBuilder msg;
         withLogin(cxt, [&](auto user) {
             QSqlQuery statement;
-            statement.prepare("SELECT name FROM projects WHERE \"user\" = ?;");
+            statement.prepare("SELECT name, pid FROM projects WHERE \"user\" = ?;");
             KJ_LOG(INFO, user);
             statement.addBindValue(user.c_str());
             statement.exec();
             auto result = msg.initRoot<Either<BoxedText, ::capnp::List<Project>>>();
-            int ss=0;
+            int ss = 0;
             if (db.driver()->hasFeature(QSqlDriver::QuerySize)) {
-                ss=statement.size();
+                ss = statement.size();
             } else {
                 statement.last();
                 ss = statement.at() + 1;
                 statement.first();
             }
-            KJ_LOG(INFO, ss);
             auto ls = result.initRight(ss);
             int i = 0;
             while (statement.next()) {
-                KJ_LOG(INFO, statement.value(0).toString().toStdString());
                 ls[i].setName(statement.value(0).toString().toStdString());
+                ls[i].setId(statement.value(1).toInt());
                 ++i;
             }
             cxt.getResults().setResult(result);

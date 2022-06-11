@@ -30,5 +30,3 @@ add_executable(testClient testClient.cpp ${systemSrc} ${accountSrc})
 target_link_libraries(testClient PUBLIC ${CAPNP_LIBRARIES} sha256 Qt-Secret QuaZip::QuaZip)
 target_include_directories(testClient PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/schema ${sha256_SOURCE_DIR})
 
-add_executable(testQSQL testQSQL.cpp)
-target_link_libraries(testQSQL PUBLIC Qt5::Core Qt5::Sql)
