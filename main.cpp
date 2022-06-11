@@ -2,7 +2,6 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
-#include <nanodbc/nanodbc.h>
 #include <capnp/message.h>
 #include <capnp/ez-rpc.h>
 #include <kj/debug.h>
