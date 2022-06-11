@@ -41,7 +41,7 @@ class SystemServerImpl final : public System::Server {
     std::random_device r;
 
 public:
-    explicit SystemServerImpl(const QString &host, const QString &database, const QString &username,
+    explicit SystemServerImpl(const QString &host, const int port, const QString &database, const QString &username,
                               const QString &password, redis::Redis &&redis) : db(QSqlDatabase::addDatabase("QPSQL")),
                                                                                redis(std::move(redis)),
                                                                                e(QRSAEncryption::Rsa::RSA_2048) {
@@ -49,8 +49,9 @@ public:
         db.setDatabaseName(database);
         db.setUserName(username);
         db.setPassword(password);
+        db.setPort(port);
         if (!db.open()) {
-            throw "cannot open database";
+            throw std::runtime_error("cannot open database");
         }
     }
 
@@ -214,7 +215,7 @@ public:
 
 int main(int argc, char* argv[]) {
     QCoreApplication a(argc, argv);
-    capnp::EzRpcServer server(kj::heap<SystemServerImpl>("localhost", "myDatabaseName", "postgres", "114514",
+    capnp::EzRpcServer server(kj::heap<SystemServerImpl>("localhost", 5432, "serverDB", "postgres", "114514",
                                                          redis::Redis("tcp://127.0.0.1:6379")), "*:10100");
     ::kj::_::Debug::setLogLevel(kj::LogSeverity::INFO);
     auto &scope = server.getWaitScope();
