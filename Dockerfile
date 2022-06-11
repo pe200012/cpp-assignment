@@ -11,6 +11,8 @@ RUN printf 'newuser ALL=(ALL) ALL\n' | tee -a /etc/sudoers
 
 RUN sudo -u newuser bash -c 'git clone https://aur.archlinux.org/redis-plus-plus.git rpp && cd rpp && makepkg -si --noconfirm'
 
+RUN sudo -u newuser bash -c 'git clone https://aur.archlinux.org/psqlodbc.git odbc && cd odbc && makepkg -si --noconfirm'
+
 USER root
     
 RUN git clone https://github.com/pe200012/cpp-assignment.git cpp
