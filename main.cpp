@@ -225,6 +225,6 @@ int main(int argc, char* argv[]) {
     } else {
         std::cout << "Listening on port " << port << std::endl;
     }
-//    kj::NEVER_DONE.wait(scope);
-    return a.exec();
+    kj::NEVER_DONE.wait(scope);
+    return 0;
 }
