@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(_Graduate_Design_Management_System)
-find_package(nanodbc CONFIG REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Core Sql REQUIRED)
 find_package(CapnProto CONFIG REQUIRED)
 find_package(QuaZip-Qt5)
 find_path(HIREDIS_HEADER hiredis)
@@ -23,9 +23,12 @@ capnp_generate_cpp(systemSrc systemHeader schema/system.capnp)
 
 add_executable(_Graduate_Design_Management_System main.cpp ${systemSrc} ${accountSrc})
 target_include_directories(_Graduate_Design_Management_System PUBLIC ${HIREDIS_HEADER} ${REDIS_PLUS_PLUS_HEADER})
-target_link_libraries(_Graduate_Design_Management_System PUBLIC ${CAPNP_LIBRARIES} nanodbc sha256 ${HIREDIS_LIB} ${REDIS_PLUS_PLUS_LIB} Qt-Secret QuaZip::QuaZip)
+target_link_libraries(_Graduate_Design_Management_System PUBLIC ${CAPNP_LIBRARIES} sha256 ${HIREDIS_LIB} ${REDIS_PLUS_PLUS_LIB} Qt-Secret QuaZip::QuaZip Qt5::Core Qt5::Sql)
 target_include_directories(_Graduate_Design_Management_System PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/schema ${sha256_SOURCE_DIR})
 
 add_executable(testClient testClient.cpp ${systemSrc} ${accountSrc})
 target_link_libraries(testClient PUBLIC ${CAPNP_LIBRARIES} sha256 Qt-Secret QuaZip::QuaZip)
 target_include_directories(testClient PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/schema ${sha256_SOURCE_DIR})
+
+add_executable(testQSQL testQSQL.cpp)
+target_link_libraries(testQSQL PUBLIC Qt5::Core Qt5::Sql)

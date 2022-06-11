@@ -37,6 +37,7 @@ class Client {
     System::Client system;
     kj::WaitScope &scope;
     QRSAEncryption e;
+    std::string name;
 
     void init() {
         auto pack = system.initiateSessionRequest().send().wait(scope).getPack();
@@ -67,6 +68,7 @@ public:
             std::cerr << "login failed: " << err << std::endl;
             return false;
         } else {
+            name = username;
             return true;
         }
     }
@@ -80,9 +82,9 @@ public:
         }
     }
 
-    void upload() {
-        JlCompress::compressDir("design.zip", "design_dir");
-        std::ifstream input("./design.zip", std::ios::binary);
+    void upload(std::string name, std::string path, std::string remotePath) {
+        JlCompress::compressDir(QString::fromStdString(name + ".zip"), QString::fromStdString(path));
+        std::ifstream input(name + ".zip", std::ios::binary);
         std::vector<uint8_t> bytes(
                 (std::istreambuf_iterator<char>(input)),
                 (std::istreambuf_iterator<char>()));
@@ -92,11 +94,25 @@ public:
         auto payload = kj::arrayPtr(buf, bytes.size());
         auto req = system.uploadRequest();
         req.setFingerprint(fingerprint);
-        req.setPath("proj1");
+        req.setName(name);
+        req.setPath(remotePath);
         req.setData(payload);
         std::string err = req.send().wait(scope).getError();
         if (!err.empty()) {
             std::cerr << err << std::endl;
+        }
+    }
+    void listProject() {
+        auto req = system.listProjectRequest();
+        req.setFingerprint(fingerprint);
+        auto result = req.send().wait(scope).getResult();
+        if (result.hasLeft()) {
+            std::cerr<<result.getLeft().getValue().cStr()<<std::endl;
+        } else {
+            auto ls = result.getRight();
+            for (const auto &x: ls) {
+                std::cout << x.getName().cStr() << std::endl;
+            }
         }
     }
 };
@@ -104,7 +120,8 @@ public:
 int main(void) {
     Client c("localhost", 10100);
     c.login("user1", "password");
-    c.upload();
+    c.upload("proj1", "./design_dir", "design_dir");
+    c.listProject();
     c.logout();
     return 0;
 }

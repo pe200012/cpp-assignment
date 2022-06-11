@@ -16,11 +16,16 @@ struct InitPack {
     pubkey @1 :Data;
 }
 
+struct Project {
+    name @0 :Text;
+}
+
 interface System {
     using Fingerprint = Text;
     initiateSession @4 () -> (pack :InitPack);
     login @0 (fingerprint :Fingerprint, uid :Text, password :Data) -> (error :Text);
     logout @1 (fingerprint :Fingerprint) -> ();
-    upload @2 (fingerprint :Fingerprint, path :Text, data :Data) -> (error :Text);
+    upload @2 (fingerprint :Fingerprint, name :Text, path :Text, data :Data) -> (error :Text);
     remove @3 (fingerprint :Fingerprint, name :Text) -> (error :Text);
+    listProject @5 (fingerprint :Fingerprint) -> (result :Either(BoxedText, List(Project)));
 }
