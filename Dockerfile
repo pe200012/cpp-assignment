@@ -19,4 +19,4 @@ WORKDIR cpp/build
 
 RUN cmake .. && cmake --build .
 
-RUN ./server
+SHELL ["/tmp/cpp/build/server"]

@@ -212,7 +212,8 @@ public:
     }
 };
 
-int main() {
+int main(int argc, char* argv[]) {
+    QCoreApplication a(argc, argv);
     capnp::EzRpcServer server(kj::heap<SystemServerImpl>("localhost", "myDatabaseName", "postgres", "114514",
                                                          redis::Redis("tcp://127.0.0.1:6379")), "*:10100");
     ::kj::_::Debug::setLogLevel(kj::LogSeverity::INFO);
@@ -223,6 +224,6 @@ int main() {
     } else {
         std::cout << "Listening on port " << port << std::endl;
     }
-    kj::NEVER_DONE.wait(scope);
-    return 0;
+//    kj::NEVER_DONE.wait(scope);
+    return a.exec();
 }
