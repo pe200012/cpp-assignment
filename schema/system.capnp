@@ -26,4 +26,9 @@ interface System {
     remove @3 (fingerprint :Fingerprint, name :Text) -> (error :Text);
     listProject @5 (fingerprint :Fingerprint) -> (result :Either(BoxedText, List(DataI.Project)));
     listAll @6 (fingerprint :Fingerprint, courseName :Text) -> (result :Either(BoxedText, List(DataI.Project)));
+    addStudent @7 (fingerprint :Fingerprint, uid :Text, courseName :Text) -> (error :Text);
+    removeStudent @8 (fingerprint :Fingerprint, uid :Text, courseName :Text) -> (error :Text);
+    judge @9 (fingerprint :Fingerprint, id :Text, score :Float32) -> (error :Text);
+    newCourse @10 (fingerprint :Fingerprint, courseName :Text) -> (error :Text);
+    deleteCourse @11 (fingerprint :Fingerprint, courseId :Text) -> (error :Text);
 }

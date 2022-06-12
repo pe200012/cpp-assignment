@@ -211,9 +211,118 @@ public:
         });
         return kj::READY_NOW;
     }
+
+    kj::Promise<void> listAll(ListAllContext cxt) override {
+        ::capnp::MallocMessageBuilder msg;
+        withLogin(cxt, [&](auto user) {
+            QSqlQuery statement;
+            statement.prepare("SELECT name, pid FROM projects;");
+            KJ_LOG(INFO, user);
+            statement.exec();
+            auto result = msg.initRoot<Either<BoxedText, ::capnp::List<Project>>>();
+            int ss = 0;
+            if (db.driver()->hasFeature(QSqlDriver::QuerySize)) {
+                ss = statement.size();
+            } else {
+                statement.last();
+                ss = statement.at() + 1;
+                statement.first();
+            }
+            auto ls = result.initRight(ss);
+            int i = 0;
+            while (statement.next()) {
+                ls[i].setName(statement.value(0).toString().toStdString());
+                ls[i].setId(statement.value(1).toInt());
+                ++i;
+            }
+            cxt.getResults().setResult(result);
+        }, [&]() {
+            auto either = msg.initRoot<Either<BoxedText, ::capnp::List<Project>>>();
+            auto err = msg.initRoot<BoxedText>();
+            err.setValue("please login first");
+            either.setLeft(err);
+            cxt.getResults().setResult(either);
+        });
+        return kj::READY_NOW;
+    }
+
+    kj::Promise<void> addStudent(AddStudentContext cxt) override {
+        withLogin(cxt, [&](auto user) {
+            redis.append(cxt.getParams().getCourseName().cStr(), cxt.getParams().getUid().cStr());
+        }, [&cxt]() {
+            cxt.getResults().setError("please login first");
+        });
+        return kj::READY_NOW;
+    }
+
+    kj::Promise<void> removeStudent(RemoveStudentContext cxt) override {
+        withLogin(cxt, [&](auto user) {
+            redis.lrem(cxt.getParams().getCourseName().cStr(), 1, cxt.getParams().getUid().cStr());
+        }, [&cxt]() {
+            cxt.getResults().setError("please login first");
+        });
+        return kj::READY_NOW;
+    }
+
+    kj::Promise<void> judge(JudgeContext cxt) override {
+        withLogin(cxt, [&](auto user) {
+            QSqlQuery statement;
+            statement.prepare("UPDATE projects SET score = ? WHERE pid = ?;");
+            statement.addBindValue(cxt.getParams().getScore());
+            statement.addBindValue(cxt.getParams().getId().cStr());
+            statement.exec();
+        }, [&cxt]() {
+            cxt.getResults().setError("please login first");
+        });
+        return kj::READY_NOW;
+    }
+
+    kj::Promise<void> newCourse(NewCourseContext cxt) override {
+        std::default_random_engine e1(r());
+        std::uniform_int_distribution<char> dist('0', '9');
+        withLogin(cxt, [&](auto user) {
+            QSqlQuery statement;
+            statement.prepare("SELECT * FROM teacher WHERE uid = ?");
+            statement.addBindValue(QString::fromStdString(user));
+            statement.exec();
+            if (statement.next()) {
+                char courseId[64];
+                for (auto &x : courseId) {
+                    x = dist(e1);
+                }
+                statement.prepare("INSERT INTO courses VALUES(?,?,?)");
+                statement.addBindValue(courseId);
+                statement.addBindValue(cxt.getParams().getCourseName().cStr());
+                statement.addBindValue(QString::fromStdString(user));
+                statement.exec();
+                redis.append(user+"Courses", courseId);
+            } else {
+                cxt.getResults().setError("permisson denied: you're not a teacher");
+            }
+        }, [&cxt]() {
+            cxt.getResults().setError("please login first");
+        });
+        return kj::READY_NOW;
+    }
+    kj::Promise<void> deleteCourse(DeleteCourseContext cxt) override {
+        withLogin(cxt, [&](auto user) {
+            QSqlQuery statement;
+            statement.prepare("SELECT * FROM teacher WHERE uid = ?");
+            statement.addBindValue(QString::fromStdString(user));
+            statement.exec();
+            if (statement.next()) {
+                redis.lrem(user+"Courses", 1, cxt.getParams().getCourseId().cStr());
+            } else {
+                cxt.getResults().setError("permisson denied: you're not a teacher");
+            }
+        }, [&cxt]() {
+            cxt.getResults().setError("please login first");
+        });
+        return kj::READY_NOW;
+    }
 };
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     QCoreApplication a(argc, argv);
     capnp::EzRpcServer server(kj::heap<SystemServerImpl>("localhost", 5432, "serverDB", "postgres", "114514",
                                                          redis::Redis("tcp://127.0.0.1:6379")), "*:10100");

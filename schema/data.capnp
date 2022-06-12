@@ -7,5 +7,6 @@ struct Project {
 }
 
 struct Course {
+    id @1 :Text;
     name @0 :Text;
 }
