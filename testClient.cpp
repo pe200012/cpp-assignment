@@ -82,7 +82,7 @@ public:
         }
     }
 
-    void upload(std::string name, std::string path, std::string remotePath) {
+    void upload(const std::string &name, const std::string &path, const std::string &remotePath) {
         JlCompress::compressDir(QString::fromStdString(name + ".zip"), QString::fromStdString(path));
         std::ifstream input(name + ".zip", std::ios::binary);
         std::vector<uint8_t> bytes(
@@ -116,6 +116,73 @@ public:
             }
         }
     }
+
+    void listAll() {
+        auto req = system.listAllRequest();
+        req.setFingerprint(fingerprint);
+        auto result = req.send().wait(scope).getResult();
+        if (result.hasLeft()) {
+            std::cerr << result.getLeft().getValue().cStr() << std::endl;
+        } else {
+            auto ls = result.getRight();
+            for (const auto &x: ls) {
+                std::cout << x.getId() << ':' << x.getName().cStr() << std::endl;
+            }
+        }
+    }
+
+    void addStudent(const std::string &uid, const std::string &courseName) {
+        auto req = system.addStudentRequest();
+        req.setFingerprint(fingerprint);
+        req.setUid(uid);
+        req.setCourseName(courseName);
+        std::string result = req.send().wait(scope).getError();
+        if(!result.empty()) {
+            std::cout << result << std::endl;
+        }
+    }
+        
+    void removeStudent(const std::string &uid, const std::string &courseName) {
+        auto req = system.removeStudentRequest();
+        req.setFingerprint(fingerprint);
+        req.setUid(uid);
+        req.setCourseName(courseName);
+        std::string result = req.send().wait(scope).getError();
+        if(!result.empty()) {
+            std::cout << result << std::endl;
+        }
+    }
+
+    void judge(const std::string &id, const double score) {
+        auto req = system.judgeRequest();
+        req.setFingerprint(fingerprint);
+        req.setId(id);
+        req.setScore(score);
+        std::string result = req.send().wait(scope).getError();
+        if(!result.empty()) {
+            std::cout << result << std::endl;
+        }
+    }
+
+    void newCourse(const std::string &courseName) {
+        auto req = system.newCourseRequest();
+        req.setFingerprint(fingerprint);
+        req.setCourseName(courseName);
+        std::string result = req.send().wait(scope).getError();
+        if(!result.empty()) {
+            std::cout << result << std::endl;
+        }
+    }
+
+    void deleteCourse(const std::string &courseId) {
+        auto req = system.deleteCourseRequest();
+        req.setFingerprint(fingerprint);
+        req.setCourseId(courseId);
+        std::string result = req.send().wait(scope).getError();
+        if(!result.empty()) {
+            std::cout << result << std::endl;
+        }
+    }
 };
 
 int main(void) {
@@ -123,6 +190,7 @@ int main(void) {
     c.login("user1", "password");
 //    c.upload("proj1", "./design_dir", "design_dir");
     c.listProject();
+    c.listAll();
     c.logout();
     return 0;
 }
