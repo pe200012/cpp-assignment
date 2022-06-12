@@ -169,8 +169,12 @@ public:
     }
 
     kj::Promise<void> remove(RemoveContext cxt) override {
-        withLogin(cxt, [](auto user) {
-
+        withLogin(cxt, [&](auto user) {
+            QSqlQuery statement;
+            statement.prepare("DELETE FROM projects WHERE \"user\" = ? AND pid = ?;");
+            statement.addBindValue(QString::fromStdString(user));
+            statement.addBindValue(cxt.getParams().getPid().cStr());
+            statement.exec();
         }, [&cxt]() {
             cxt.getResults().setError("please login first");
         });

@@ -4,6 +4,7 @@ struct Project {
     id @1 :Int32;
     name @0 :Text;
     score @2 :Float32;
+    owner @3 :Text;
 }
 
 struct Course {
