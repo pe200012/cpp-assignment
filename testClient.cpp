@@ -102,25 +102,26 @@ public:
             std::cerr << err << std::endl;
         }
     }
+
     void listProject() {
         auto req = system.listProjectRequest();
         req.setFingerprint(fingerprint);
         auto result = req.send().wait(scope).getResult();
         if (result.hasLeft()) {
-            std::cerr<<result.getLeft().getValue().cStr()<<std::endl;
+            std::cerr << result.getLeft().getValue().cStr() << std::endl;
         } else {
             auto ls = result.getRight();
             for (const auto &x: ls) {
-                std::cout << x.getName().cStr() << std::endl;
+                std::cout << x.getId() << ':' << x.getName().cStr() << std::endl;
             }
         }
     }
 };
 
 int main(void) {
-    Client c("localhost", 10100);
+    Client c("10.243.84.204", 10100);
     c.login("user1", "password");
-    c.upload("proj1", "./design_dir", "design_dir");
+//    c.upload("proj1", "./design_dir", "design_dir");
     c.listProject();
     c.logout();
     return 0;
