@@ -22,7 +22,7 @@ capnp_generate_cpp(dataSrc dataHeader schema/data.capnp)
 capnp_generate_cpp(accountSrc accountHeader schema/account.capnp)
 capnp_generate_cpp(systemSrc systemHeader schema/system.capnp)
 
-add_executable(server main.cpp ${systemSrc} ${accountSrc} ${dataSrc})
+add_executable(server server.cpp ${systemSrc} ${accountSrc} ${dataSrc})
 target_include_directories(server PUBLIC ${HIREDIS_HEADER} ${REDIS_PLUS_PLUS_HEADER})
 target_link_libraries(server PUBLIC ${CAPNP_LIBRARIES} sha256 ${HIREDIS_LIB} ${REDIS_PLUS_PLUS_LIB} Qt-Secret QuaZip::QuaZip Qt5::Core Qt5::Sql)
 target_include_directories(server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/schema ${SHA256_SOURCE_DIR}/src)
