@@ -22,12 +22,12 @@ capnp_generate_cpp(dataSrc dataHeader schema/data.capnp)
 capnp_generate_cpp(accountSrc accountHeader schema/account.capnp)
 capnp_generate_cpp(systemSrc systemHeader schema/system.capnp)
 
-add_executable(server server.cpp ${systemSrc} ${accountSrc} ${dataSrc})
+add_executable(server server.cpp ${systemSrc} ${accountSrc} ${dataSrc} ${SHA256_SOURCE_DIR}/src/SHA256.cpp)
 target_include_directories(server PUBLIC ${HIREDIS_HEADER} ${REDIS_PLUS_PLUS_HEADER})
 target_link_libraries(server PUBLIC ${CAPNP_LIBRARIES} sha256 ${HIREDIS_LIB} ${REDIS_PLUS_PLUS_LIB} Qt-Secret QuaZip::QuaZip Qt5::Core Qt5::Sql)
-target_include_directories(server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/schema ${SHA256_SOURCE_DIR}/src)
+target_include_directories(server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/schema ${SHA256_SOURCE_DIR} ${SHA256_SOURCE_DIR}/src)
 
 add_executable(testClient testClient.cpp ${systemSrc} ${accountSrc} ${dataSrc})
 target_link_libraries(testClient PUBLIC ${CAPNP_LIBRARIES} sha256 Qt-Secret QuaZip::QuaZip)
-target_include_directories(testClient PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/schema ${sha256_SOURCE_DIR})
+target_include_directories(testClient PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/schema ${SHA256_SOURCE_DIR})
 

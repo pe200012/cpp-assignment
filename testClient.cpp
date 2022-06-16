@@ -1,21 +1,22 @@
 //
 // Created by pe200012 on 22/06/06.
 //
-#include <iostream>
+#include "SHA256.h"
+#include "qrsaencryption.h"
+#include "system.capnp.h"
+#include "third_party/Base64.h"
+#include <QuaZip-Qt5-1.3/quazip/JlCompress.h>
 #include <array>
+#include <capnp/ez-rpc.h>
+#include <capnp/message.h>
 #include <fstream>
+#include <iostream>
 #include <iterator>
 #include <vector>
-#include <capnp/message.h>
-#include <capnp/ez-rpc.h>
-#include "system.capnp.h"
-#include "qrsaencryption.h"
-#include "third_party/Base64.h"
-#include "SHA256.h"
-#include <QuaZip-Qt5-1.3/quazip/JlCompress.h>
 
 class CalcSHA256 {
     std::string s;
+
 public:
     CalcSHA256(std::string msg) {
         SHA256 sha;
@@ -25,9 +26,7 @@ public:
         delete[] digest;
     }
 
-    std::string operator()() const {
-        return s;
-    }
+    std::string operator()() const { return s; }
 };
 
 class Client {
@@ -44,12 +43,14 @@ class Client {
         fingerprint = pack.getFingerprint();
         auto pubkeyPtr = pack.getPubkey();
         pubkey.clear();
-        for (const auto &x: pubkeyPtr) pubkey.push_back(x);
+        for (const auto &x: pubkeyPtr)
+            pubkey.push_back(x);
     }
 
 public:
-    Client(const std::string &host, const int port) : client(host, port), system(client.getMain<System>()),
-                                                      scope(client.getWaitScope()), e(QRSAEncryption::Rsa::RSA_2048) {
+    Client(const std::string &host, const int port)
+            : client(host, port), system(client.getMain<System>()),
+              scope(client.getWaitScope()), e(QRSAEncryption::Rsa::RSA_2048) {
         init();
     }
 
@@ -59,7 +60,8 @@ public:
         auto req = system.loginRequest();
         req.setUid(username);
         uint8_t bytes[enc.size()];
-        for (int i = 0; i != enc.size(); ++i) bytes[i] = enc[i];
+        for (int i = 0; i != enc.size(); ++i)
+            bytes[i] = enc[i];
         auto payload = kj::arrayPtr(bytes, sizeof(bytes));
         req.setFingerprint(fingerprint);
         req.setPassword(payload);
@@ -82,21 +84,33 @@ public:
         }
     }
 
-    void upload(const std::string &name, const std::string &path, const std::string &remotePath) {
-        JlCompress::compressDir(QString::fromStdString(name + ".zip"), QString::fromStdString(path));
+    void upload(const std::string &name, const std::string &path,
+                const std::string &remotePath) {
+        JlCompress::compressDir(QString::fromStdString(name + ".zip"),
+                                QString::fromStdString(path));
         std::ifstream input(name + ".zip", std::ios::binary);
-        std::vector<uint8_t> bytes(
-                (std::istreambuf_iterator<char>(input)),
-                (std::istreambuf_iterator<char>()));
+        std::vector<uint8_t> bytes((std::istreambuf_iterator<char>(input)),
+                                   (std::istreambuf_iterator<char>()));
         input.close();
         uint8_t buf[bytes.size()];
-        for (int i = 0; i != bytes.size(); ++i) buf[i] = bytes[i];
+        for (int i = 0; i != bytes.size(); ++i)
+            buf[i] = bytes[i];
         auto payload = kj::arrayPtr(buf, bytes.size());
         auto req = system.uploadRequest();
         req.setFingerprint(fingerprint);
         req.setName(name);
         req.setPath(remotePath);
         req.setData(payload);
+        std::string err = req.send().wait(scope).getError();
+        if (!err.empty()) {
+            std::cerr << err << std::endl;
+        }
+    }
+
+    void remove(const std::string &projectId) {
+        auto req = system.removeRequest();
+        req.setFingerprint(fingerprint);
+        req.setPid(projectId);
         std::string err = req.send().wait(scope).getError();
         if (!err.empty()) {
             std::cerr << err << std::endl;
@@ -137,18 +151,18 @@ public:
         req.setUid(uid);
         req.setCourseName(courseName);
         std::string result = req.send().wait(scope).getError();
-        if(!result.empty()) {
+        if (!result.empty()) {
             std::cout << result << std::endl;
         }
     }
-        
+
     void removeStudent(const std::string &uid, const std::string &courseName) {
         auto req = system.removeStudentRequest();
         req.setFingerprint(fingerprint);
         req.setUid(uid);
         req.setCourseName(courseName);
         std::string result = req.send().wait(scope).getError();
-        if(!result.empty()) {
+        if (!result.empty()) {
             std::cout << result << std::endl;
         }
     }
@@ -159,7 +173,7 @@ public:
         req.setId(id);
         req.setScore(score);
         std::string result = req.send().wait(scope).getError();
-        if(!result.empty()) {
+        if (!result.empty()) {
             std::cout << result << std::endl;
         }
     }
@@ -169,7 +183,7 @@ public:
         req.setFingerprint(fingerprint);
         req.setCourseName(courseName);
         std::string result = req.send().wait(scope).getError();
-        if(!result.empty()) {
+        if (!result.empty()) {
             std::cout << result << std::endl;
         }
     }
@@ -179,18 +193,117 @@ public:
         req.setFingerprint(fingerprint);
         req.setCourseId(courseId);
         std::string result = req.send().wait(scope).getError();
-        if(!result.empty()) {
+        if (!result.empty()) {
             std::cout << result << std::endl;
         }
     }
 };
 
+void formLoop() {
+    Client c("localhost", 10100);
+    std::cout << "==================================" << std::endl;
+    std::cout << "=        毕业设计管理系统          =" << std::endl;
+    std::cout << "==================================" << std::endl;
+    std::string username, password;
+    while (true) {
+        std::cout << "登录用户名: " << std::flush;
+        std::cin >> username;
+        std::cout << "用户密码: " << std::flush;
+        std::cin >> password;
+        if (!c.login(username, password)) { ;
+            std::cout << std::endl;
+        } else {
+            std::cout << "登录成功!" << std::endl;
+            break;
+        }
+    }
+    bool flag = true;
+    while (flag) {
+        std::cout << "0) 退出" << std::endl;
+        std::cout << "1) 上传课程设计" << std::endl;
+        std::cout << "2) 删除课程设计" << std::endl;
+        std::cout << "3) 列出我的课程设计" << std::endl;
+        std::cout << "4) 列出所有课程设计" << std::endl;
+        std::cout << "5) 添加学生到课程" << std::endl;
+        std::cout << "6) 从课程删除学生" << std::endl;
+        std::cout << "7) 给项目评分" << std::endl;
+        std::cout << "8) 添加课程" << std::endl;
+        std::cout << "9) 删除课程" << std::endl;
+        std::cout << "choice: " << std::flush;
+        int choice;
+        std::cin >> choice;
+        std::string projectName, path, remotePath, student, courseName;
+        switch (choice) {
+            case 0:
+                flag = false;
+                break;
+            case 1:
+                std::cout << "项目名称： " << std::flush;
+                std::cin >> projectName;
+                std::cout << "项目路径： " << std::flush;
+                std::cin >> path;
+                std::cout << "远端路径： " << std::flush;
+                std::cin >> remotePath;
+                c.upload(projectName, path, remotePath);
+                std::cout << "完成操作" << std::endl;
+                break;
+            case 2:
+                std::cout << "项目编号： " << std::flush;
+                std::cin >> projectName;
+                c.remove(projectName);
+                std::cout << "完成操作" << std::endl;
+            case 3:
+                std::cout << "我的课程设计:" << std::endl;
+                c.listProject();
+                break;
+            case 4:
+                std::cout << "课程设计:" << std::endl;
+                c.listAll();
+                break;
+            case 5:
+                std::cout << "课程名称： " << std::flush;
+                std::cin >> courseName;
+                std::cout << "学生姓名： " << std::flush;
+                std::cin >> student;
+                c.addStudent(courseName, student);
+                std::cout << "完成操作" << std::endl;
+                break;
+            case 6:
+                std::cout << "课程名称： " << std::flush;
+                std::cin >> courseName;
+                std::cout << "学生姓名： " << std::flush;
+                std::cin >> student;
+                c.removeStudent(courseName, student);
+                std::cout << "完成操作" << std::endl;
+                break;
+            case 7:
+                std::cout << "项目编号： " << std::flush;
+                std::cin >> projectName;
+                std::cout << "评分： " << std::flush;
+                double score;
+                std::cin >> score;
+                c.judge(projectName, score);
+                std::cout << "完成操作" << std::endl;
+                break;
+            case 8:
+                std::cout << "课程名称： " << std::flush;
+                std::cin >> courseName;
+                c.newCourse(courseName);
+                std::cout << "完成操作" << std::endl;
+                break;
+            case 9:
+                std::cout << "课程名称： " << std::flush;
+                std::cin >> courseName;
+                c.deleteCourse(courseName);
+                std::cout << "完成操作" << std::endl;
+                break;
+
+            default:;
+        }
+    }
+}
+
 int main(void) {
-    Client c("10.243.84.204", 10100);
-    c.login("user1", "password");
-//    c.upload("proj1", "./design_dir", "design_dir");
-    c.listProject();
-    c.listAll();
-    c.logout();
+    formLoop();
     return 0;
 }
