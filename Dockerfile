@@ -13,6 +13,8 @@ RUN sudo -u newuser bash -c 'git clone https://aur.archlinux.org/redis-plus-plus
 
 RUN sudo -u newuser bash -c 'git clone https://aur.archlinux.org/psqlodbc.git odbc && cd odbc && makepkg -si --noconfirm'
 
+RUN echo ""
+
 USER root
     
 RUN git clone https://github.com/pe200012/cpp-assignment.git cpp
@@ -21,4 +23,4 @@ WORKDIR cpp/build
 
 RUN cmake .. && cmake --build .
 
-RUN ["/bin/bash", "-c", "/tmp/cpp/build/server"]
+RUN echo "HELLO"

@@ -2,7 +2,7 @@
 // Created by pe200012 on 22/06/06.
 //
 #include "SHA256.h"
-#include "qrsaencryption.h"
+#include <qrsaencryption.h>
 #include "system.capnp.h"
 #include "third_party/Base64.h"
 #include <QuaZip-Qt5-1.3/quazip/JlCompress.h>
@@ -26,7 +26,7 @@ public:
         delete[] digest;
     }
 
-    std::string operator()() const { return s; }
+    std::string operator()() const noexcept { return s; }
 };
 
 class Client {

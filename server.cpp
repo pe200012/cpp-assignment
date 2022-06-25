@@ -8,9 +8,9 @@
 #include <kj/exception.h>
 #include "account.capnp.h"
 #include "system.capnp.h"
+#include <qrsaencryption.h>
 #include "SHA256.h"
 #include "third_party/Base64.h"
-#include <qrsaencryption.h>
 #include <sw/redis++/redis++.h>
 #include <QuaZip-Qt5-1.3/quazip/JlCompress.h>
 #include <QString>
@@ -316,6 +316,9 @@ public:
             statement.exec();
             if (statement.next()) {
                 redis.lrem(user+"Courses", 1, cxt.getParams().getCourseId().cStr());
+                statement.prepare("DELETE courses WHERE \"id\" = ?");
+                statement.addBindValue(QString::fromStdString(cxt.getParams().getCourseId()));
+                statement.exec();
             } else {
                 cxt.getResults().setError("permisson denied: you're not a teacher");
             }
@@ -328,8 +331,8 @@ public:
 
 int main(int argc, char *argv[]) {
     QCoreApplication a(argc, argv);
-    capnp::EzRpcServer server(kj::heap<SystemServerImpl>("localhost", 5432, "serverDB", "postgres", "114514",
-                                                         redis::Redis("tcp://127.0.0.1:6379")), "*:10100");
+    capnp::EzRpcServer server(kj::heap<SystemServerImpl>("localhost", 5433, "serverDB", "postgres", "114514",
+                                                         redis::Redis("tcp://127.0.0.1:6377")), "*:10100");
     ::kj::_::Debug::setLogLevel(kj::LogSeverity::INFO);
     auto &scope = server.getWaitScope();
     unsigned int port = server.getPort().wait(scope);

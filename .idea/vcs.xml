@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/_deps/qt-secret-src" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/_deps/qt-secret-src/src/Qt-AES" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/_deps/qt-secret-src/src/mini-gmp" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/_deps/qt-secret-src/src/mini-gmp/CMake" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/_deps/qt-secret-src/src/mini-gmp/CMake/DoxyStyle" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/_deps/qt-secret-src/src/mini-gmp/CMake/QtIosCMake" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/_deps/qt-secret-src/src/mini-gmp/CMake/QtStaticCMake" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/_deps/qt-secret-src/src/mini-gmp/CMake/qt-android-cmake" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/build/_deps/sha256-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/qt-secret-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/qt-secret-src/src/Qt-AES" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/qt-secret-src/src/mini-gmp" vcs="Git" />
